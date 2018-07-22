@@ -58,7 +58,7 @@ def getAPIKey(filepath='../../key.secret'):
 
 if __name__ == "__main__":
     apiKey = getAPIKey()
-    users = [Human('youngflee_xyz'), Human('justinrhan'), Human('arynh')]
+    users = [Human('discoversoar'), Human('youngflee_xyz'), Human('justinrhan'), Human('arynh')]
     top = 10  # number of albums to look at
     print("Top " + str(top) + " albums of the past week:")
     print("--------------------------------")
