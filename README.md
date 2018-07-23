@@ -10,4 +10,4 @@ the user hasn't heard before.
 
 ## Steps
 
-- [ ] Create app.
+- [ ] Create something functional.
