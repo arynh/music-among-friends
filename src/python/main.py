@@ -1,6 +1,8 @@
 import json  # for parsing json from the internets
 import urllib.request  # for making a get request to the api
 from tabulate import tabulate  # for printing out the table
+from flask import Flask, render_template  # for generating and serving the web page
+app = Flask(__name__)
 
 
 class Human(object):
@@ -9,10 +11,12 @@ class Human(object):
     information about the users.
     """
     username = None
+    picture = None
     # firstName = None  # most users don't have their real names filled in
     # tracks = None  # to be implemented
     # artists = None  # to be implemented
     albums = None
+    scrobbles = None
 
     def __init__(self, username):
         """
@@ -31,6 +35,15 @@ class Human(object):
             # print("adding", name)
             artist = album['artist']['#text']
             self.albums.append(Album(name, artist))
+        raw = urllib.request.urlopen('http://ws.audioscrobbler.com/2.0/?method=user.getinfo&user='
+                                     + self.username + '&api_key=' + apiKey
+                                     + '&format=json').read().decode('utf-8')
+        parsed = parser.decode(raw)
+        images = parsed['user']['image']
+        scrobbles = parsed['user']['playcount']
+        image = images[-1]['#text']
+        self.picture = image
+        self.scrobbles = scrobbles
 
 
 class Album(object):
@@ -56,20 +69,53 @@ def getAPIKey(filepath='../../key.secret'):
     return apiKey
 
 
+@app.route('/')
+def renderPage():
+    users = [Human('discoversoar'), Human('youngflee_xyz'),
+             Human('justinrhan'), Human('arynh')]
+    top = 10  # number of albums to look at
+    # print("Top " + str(top) + " albums of the past week:")
+    # print("--------------------------------")
+    usernames = [user.username for user in users]
+    pictures = [user.picture for user in users]
+    scrobbles = [user.scrobbles for user in users]
+    albums = []
+    for rank in range(top):
+        row = []
+        for user in users:
+            name = user.albums[rank].name  # only take the first 30 chars
+            row.append(name)
+        albums.append(row)
+
+    artists = []
+    for rank in range(top):
+        row = []
+        for user in users:
+            artist = user.albums[rank].artist  # only take the first 30 chars
+            row.append(artist)
+        artists.append(row)
+
+    # print(tabulate(albums, headers=usernames, tablefmt="fancy_grid"))
+
+    # generate index to list map
+    twoDToOneD = []
+    for i in range(top):
+        twoDToOneD.append([k + len(users) * i for k in range(1, len(users) + 1)])
+
+    page = render_template('index.html',
+                           numAlbums=[i for i in range(1, top * len(users) + 1)],
+                           rowList=[i for i in range(top)],
+                           colList=[i for i in range(len(users))],
+                           albums=albums,
+                           artists=artists,
+                           #links=0,
+                           albumMatrixToList=twoDToOneD,
+                           widthPercent=100/(len(users)+1),
+                           zipped=zip(usernames, pictures),
+                           usersToPass=zip(usernames, scrobbles))
+    return page
+
+
 if __name__ == "__main__":
     apiKey = getAPIKey()
-    users = [Human('discoversoar'), Human('youngflee_xyz'), Human('justinrhan'), Human('arynh')]
-    top = 10  # number of albums to look at
-    print("Top " + str(top) + " albums of the past week:")
-    print("--------------------------------")
-    usernames = [user.username for user in users]
-    table = []
-    for rank in range(top):
-        row = [str(rank + 1)]
-        for user in users:
-            name = user.albums[rank].name[:30]  # only take the first 30 chars
-            artist = user.albums[rank].artist[:30]  # ^
-            row.append(name + '\n' + artist)
-        table.append(row)
-
-    print(tabulate(table, headers=usernames, tablefmt="fancy_grid"))
+    app.run(debug=True)
