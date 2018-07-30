@@ -52,6 +52,7 @@ class Album(object):
     """
     name = None
     artist = None
+    art = None
 
     def __init__(self, name, artist):
         self.name = name
@@ -72,7 +73,7 @@ def getAPIKey(filepath='key.secret'):
 @app.route('/')
 def renderPage():
     users = [Human('discoversoar'), Human('youngflee_xyz'),
-             Human('justinrhan'), Human('arynh')]
+             Human('justinrhan'), Human('arynh'), Human('dutchxkrimpit')]
     top = 10  # number of albums to look at
     # print("Top " + str(top) + " albums of the past week:")
     # print("--------------------------------")
